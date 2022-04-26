@@ -45,7 +45,7 @@ if [ "$1" = all ] ; then
         echo ""
         source "$file"
         if [ $OCR_STATUS = live ] ; then
-            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2$[n}"
+            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2${n}"
             cd $OCR_DIRECTORY
             echo "Stopping and Removing ocr-$file container."
             docker stop ocr-$file
@@ -55,7 +55,7 @@ if [ "$1" = all ] ; then
             echo "${b}Done.${n}"
             if [ $BOOTSTRAP_STATUS = live ] ; then
                 echo ""
-                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2$[n}"
+                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2${n}"
                 cd $BOOTSTRAP_DIRECTORY
                 echo "Stopping and Removing bootstrap-$file container."
                 docker stop bootstrap-$file
@@ -80,7 +80,7 @@ elif [ $1 = live ] ; then
         echo ""
         source "$file"
         if [ $OCR_STATUS = live ] ; then
-            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2$[n}"
+            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2${n}"
             cd $OCR_DIRECTORY
             echo "Stopping and Removing ocr-$file container."
             docker stop ocr-$file
@@ -90,7 +90,7 @@ elif [ $1 = live ] ; then
             echo "${b}Done.${n}"
             if [ $BOOTSTRAP_STATUS = live ] ; then
                 echo ""
-                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2$[n}"
+                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2${n}"
                 cd $BOOTSTRAP_DIRECTORY
                 echo "Stopping and Removing bootstrap-$file container."
                 docker stop bootstrap-$file
@@ -115,7 +115,7 @@ elif [ $1 = mainnets ] ; then
         echo "$file"
         source "$file"
         if [ $OCR_STATUS = live ] ; then
-            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2$[n}"
+            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2${n}"
             cd $OCR_DIRECTORY
             echo "Stopping and Removing ocr-$file container."
             docker stop ocr-$file
@@ -125,7 +125,7 @@ elif [ $1 = mainnets ] ; then
             echo "${b}Done.${n}"
             if [ $BOOTSTRAP_STATUS = live ] ; then
                 echo ""
-                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2$[n}"
+                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2${n}"
                 cd $BOOTSTRAP_DIRECTORY
                 docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
                 echo "${b}Done.${n}"
@@ -147,7 +147,7 @@ elif [ $1 = testnets ] ; then
         echo "$file"
         source "$file"
         if [ $OCR_STATUS = live ] ; then
-            echo "Upgrading ${b}ocr-$file${n} to release ${b}$2$[n}"
+            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2${n}"
             cd $OCR_DIRECTORY
             echo "Stopping and Removing ocr-$file container."
             docker stop ocr-$file
@@ -157,7 +157,7 @@ elif [ $1 = testnets ] ; then
             echo "${b}Done.${n}"
             if [ $BOOTSTRAP_STATUS = live ] ; then
                 echo ""
-                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2$[n}"
+                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2${n}"
                 cd $BOOTSTRAP_DIRECTORY
                 echo "Stopping and Removing bootstrap-$file container."
                 docker stop bootstrap-$file
@@ -183,7 +183,7 @@ elif [ $1 = testing ] ; then
     then
         exit 1
     fi
-    read -p "${b}Are you sure you're sure?  This is very likely to cause a bad day.${n}" -n 1 -r
+    read -p "${b}Are you confident this will not cause issues?  This is very likely to cause a bad day.${n}" -n 1 -r
     echo ""
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
@@ -195,7 +195,7 @@ elif [ $1 = testing ] ; then
         echo ""
         source "$file"
         if [ $OCR_STATUS = testing ] ; then
-            echo "Upgrading ${b}ocr-$file${n} to release ${b}$2$[n}"
+            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2${n}"
             cd $OCR_DIRECTORY
             echo "Stopping and Removing ocr-$file container."
             docker stop ocr-$file
@@ -205,7 +205,7 @@ elif [ $1 = testing ] ; then
             echo "${b}Done.${n}"
             if [ $BOOTSTRAP_STATUS = live ] ; then
                 echo ""
-                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2$[n}"
+                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2${n}"
                 cd $BOOTSTRAP_DIRECTORY
                 echo "Stopping and Removing bootstrap-$file container."
                 docker stop bootstrap-$file
@@ -226,8 +226,8 @@ elif [ $1 = testing ] ; then
 # A SINGLE NETWORK IS SPECIFIED
 else
     echo ""
-    echo "Upgrading ${b}$1${n} to release tag ${b}$2${n}"
-    source $1
+    echo "    Upgrading ${b}$1${n} to release tag ${b}$2${n}"
+    source "$1"
     cd $OCR_DIRECTORY
     echo "Stopping and Removing ocr-$1 container."
     docker stop ocr-$1
@@ -237,7 +237,7 @@ else
     echo "${b}Done.${n}"
     if [ $BOOTSTRAP_STATUS = live ] ; then
         echo ""
-        echo "    Upgrading ${b}bootstrap-$1${n} to release ${b}$2$[n}"
+        echo "    Upgrading ${b}bootstrap-$1${n} to release ${b}$2${n}"
         cd $BOOTSTRAP_DIRECTORY
         echo "Stopping and Removing bootstrap-$1 container."
         docker stop bootstrap-$1
@@ -248,7 +248,6 @@ else
     else
         echo "No bootstrap node deployed for $1."
     fi
-
 fi
 
 cd $CURRENT_DUR
@@ -355,14 +354,8 @@ while getopts ":id:u:lsvh" option; do
          echo "Invalid option: $OPTARG requires an argument" 1>&2
          echo ""
          echo "Please specify the desired network or tag, and the desired release tag." 1>&2
-         echo "ex: ${b}cl-manager -$OPTARG arbitrum-mainnet 1.3.0${n}" 1>&2
-         echo "ex: ${b}cl-manager -$OPTARG all 1.3.0${n}" 1>&2
+         echo "ex: cl-manager -$OPTARG arbitrum-mainnet 1.3.0" 1>&2
          exit 1
          ;;
    esac
 done
-
-########################################################
-#                        MAIN                          #
-########################################################
-#Upgrade $1
