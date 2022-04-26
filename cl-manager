@@ -21,60 +21,7 @@ CURRENT_DIR=$(pwd)
 #                 INITIALIZE FUNCTION                  #
 ########################################################
 Initialize () {
-# Initializes a new Docker environment
-echo "${b}Initializing new Docker environment...${n}"
-
-# Intall Docker if not already installed
-if [ $(dpkg-query -W -f='${Status}' docker-ce 2>/dev/null | grep -c "install ok installed") -eq 0 ];
-then
-    # Check if running as root
-    if [ "$EUID" -ne 0 ]
-        then echo "${b}Run as elevated user (sudo)${n}"
-        exit
-    fi
-    read -p "${b} Enter your non-root username:${n} " USERNAME
-    aptInstall () {
-      echo "${b}Updating apt & Installing Docker-CE${n}"
-      apt-get -y update >>/dev/null 2>&1
-      apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common >>/dev/null 2>&1
-      curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - >>/dev/null 2>&1
-      add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" >>/dev/null 2>&1
-      apt-get -y update >>/dev/null 2>&1
-      apt-get -y install docker-ce >>/dev/null 2>&1
-      groupadd docker >>/dev/null 2>&1
-      sudo usermod -aG docker $USERNAME >>/dev/null 2>&1
-    }
-    yumInstall (){
-      echo "Updating yum"
-      echo "Installing dependencies & Docker-CE"
-      sudo yum remove docker* >>/dev/null 2>&1
-      sudo yum -y update >>/dev/null 2>&1
-      sudo yum -y remove docker* >>/dev/null 2>&1
-      sudo yum -y install yum-utils >>/dev/null 2>&1
-      sudo yum-config-manager \ --add-repo \ https://download.docker.com/linux/centos/docker-ce.repo  >>/dev/null 2>&1
-      sudo yum -y install docker-ce docker-ce-cli containerd.io >>/dev/null 2>&1
-      sudo systemctl start docker >>/dev/null 2>&1
-      groupadd docker >>/dev/null 2>&1
-      sudo usermod -aG docker $USERNAME >>/dev/null 2>&1
-      sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose >>/dev/null 2>&1
-      sudo chmod +x /usr/local/bin/docker-compose
-      docker-compose --version
-      sudo dnf install git -y
-    }
-    apt=`command -v apt-get`
-    yum=`command -v yum`
-
-    if [ -n "$apt" ]; then
-        echo "apt detected"
-        aptInstall
-    elif [ -n "$yum" ]; then
-        echo "yum detected"
-        yumInstall
-    else
-        echo "Err: apt or yum not detected.";
-        exit 1;
-    fi
-fi
+echo "test"
 }
 
 ########################################################
@@ -89,7 +36,6 @@ echo "test"
 ########################################################
 Upgrade () {
 cd networks
-echo "$1 / $2"
 
 # UPGRADE ALL NETWORKS
 if [ "$1" = all ] ; then
@@ -297,7 +243,7 @@ else
         docker stop bootstrap-$1
         docker rm bootstrap-$1
         echo "deploying new bootstrap-$1 container at relase tag $2"
-        docker run --name bootstrap-$1 --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /c>
+        docker run --name bootstrap-$1 --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
         echo "${b}Done.${n}"
     else
         echo "No bootstrap node deployed for $1."
@@ -408,10 +354,15 @@ while getopts ":id:u:lsvh" option; do
       :) # Invalid Option
          echo "Invalid option: $OPTARG requires an argument" 1>&2
          echo ""
-         echo "Please specify the desired network or 'all', and the desired release tag." 1>&2
+         echo "Please specify the desired network or tag, and the desired release tag." 1>&2
          echo "ex: ${b}cl-manager -$OPTARG arbitrum-mainnet 1.3.0${n}" 1>&2
          echo "ex: ${b}cl-manager -$OPTARG all 1.3.0${n}" 1>&2
          exit 1
          ;;
    esac
 done
+
+########################################################
+#                        MAIN                          #
+########################################################
+#Upgrade $1
