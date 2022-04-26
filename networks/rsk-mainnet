@@ -1,0 +1,31 @@
+####################################################
+#   CONFIG FILE FOR RSK MAINNET CHAINLINK NODES    #
+####################################################
+####################
+#      NOTES       #
+####################
+# If you're not running a bootstrap node, just leave the lines commendted out.
+
+# OCR_DIRECTORY --> The directory on your host machine that will be mounted as the container's volume.  This directory will contain your .env, secret, and log files.
+# OCR_STATUS    --> This should be set to 'live' or 'testing'.  If live, it will use the release you specify.  If testing, it will hold back the container so we do not apply a breaking change to a test deployment.
+# OCR_PORT      --> This is the port that your OCR node will listen on for connections from other OCR nodes.
+# OCR_GUI_PORT  --> The port that you connect to in order to access the Chainlink node's web interface.
+# OCR_LOG_PORT  --> The port that will contain the logging data necessary for monitoring.
+
+####################
+#    OCR VALUES    #
+####################
+OCR_DIRECTORY=
+OCR_STATUS=
+OCR_PORT=
+OCR_GUI_PORT=
+OCR_LOG_PORT=
+
+####################
+# BOOTSTRAP VALUES #
+####################
+# BOOTSTRAP_DIRECTORY=
+# BOOTSTRAP_STATUS=
+# BOOTSTRAP_PORT=
+# BOOTSTRAP_GUI_PORT=
+# BOOTSTRAP_LOG_PORT=

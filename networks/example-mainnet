@@ -1,0 +1,31 @@
+####################################################
+#     EXAMPLE CONFIG FILE FOR  CHAINLINK NODES     #
+####################################################
+####################
+#      NOTES       #
+####################
+# If you're not running a bootstrap node, just leave the lines commendted out.
+
+# OCR_DIRECTORY --> The directory on your host machine that will be mounted as the container's volume.  This directory will contain your .env, secret, and log files.
+# OCR_STATUS    --> This should be set to 'live' or 'testing'.  If live, it will use the release you specify.  If testing, it will hold back the container so we do not apply a breaking change to a test deployment.
+# OCR_PORT      --> This is the port that your OCR node will listen on for connections from other OCR nodes.
+# OCR_GUI_PORT  --> The port that you connect to in order to access the Chainlink node's web interface.
+# OCR_LOG_PORT  --> The port that will contain the logging data necessary for monitoring.
+
+####################
+#    OCR VALUES    #
+####################
+OCR_DIRECTORY=~/.ocr-data/.chainlink-example-ocr
+OCR_STATUS=live
+OCR_PORT=1111
+OCR_GUI_PORT=6689
+OCR_LOG_PORT=6688
+
+####################
+# BOOTSTRAP VALUES #
+####################
+# BOOTSTRAP_DIRECTORY=~/.bootstrap-data/.chainlink-example-bootstrap
+# BOOTSTRAP_STATUS=live
+# BOOTSTRAP_PORT=1112
+# BOOTSTRAP_GUI_PORT=6690
+# BOOTSTRAP_LOG_PORT=6687

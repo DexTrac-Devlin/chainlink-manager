@@ -1,2 +1,2 @@
 # chainlink-manager
-Script to assist in managing and maintaining your Chainlink nodes
+script(s) used to help manage chainlink nodes on a single host

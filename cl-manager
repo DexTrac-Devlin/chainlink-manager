@@ -1,0 +1,417 @@
+#!/bin/bash
+
+########################################################
+#                Formatting Variables                  #
+########################################################
+b=$(tput bold)
+n=$(tput sgr0)
+un=$(tput smul)
+nun=$(tput rmul)
+
+########################################################
+#                      Variables                       #
+########################################################
+IP_ADDRESS=$(ip route get 1.2.3.4 | awk '{print $7}')
+VERSION="0.0.3"
+CURRENT_DIR=$(pwd)
+
+# $1 --> the desired release tag
+
+########################################################
+#                 INITIALIZE FUNCTION                  #
+########################################################
+Initialize () {
+# Initializes a new Docker environment
+echo "${b}Initializing new Docker environment...${n}"
+
+# Intall Docker if not already installed
+if [ $(dpkg-query -W -f='${Status}' docker-ce 2>/dev/null | grep -c "install ok installed") -eq 0 ];
+then
+    # Check if running as root
+    if [ "$EUID" -ne 0 ]
+        then echo "${b}Run as elevated user (sudo)${n}"
+        exit
+    fi
+    read -p "${b} Enter your non-root username:${n} " USERNAME
+    aptInstall () {
+      echo "${b}Updating apt & Installing Docker-CE${n}"
+      apt-get -y update >>/dev/null 2>&1
+      apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common >>/dev/null 2>&1
+      curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - >>/dev/null 2>&1
+      add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" >>/dev/null 2>&1
+      apt-get -y update >>/dev/null 2>&1
+      apt-get -y install docker-ce >>/dev/null 2>&1
+      groupadd docker >>/dev/null 2>&1
+      sudo usermod -aG docker $USERNAME >>/dev/null 2>&1
+    }
+    yumInstall (){
+      echo "Updating yum"
+      echo "Installing dependencies & Docker-CE"
+      sudo yum remove docker* >>/dev/null 2>&1
+      sudo yum -y update >>/dev/null 2>&1
+      sudo yum -y remove docker* >>/dev/null 2>&1
+      sudo yum -y install yum-utils >>/dev/null 2>&1
+      sudo yum-config-manager \ --add-repo \ https://download.docker.com/linux/centos/docker-ce.repo  >>/dev/null 2>&1
+      sudo yum -y install docker-ce docker-ce-cli containerd.io >>/dev/null 2>&1
+      sudo systemctl start docker >>/dev/null 2>&1
+      groupadd docker >>/dev/null 2>&1
+      sudo usermod -aG docker $USERNAME >>/dev/null 2>&1
+      sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose >>/dev/null 2>&1
+      sudo chmod +x /usr/local/bin/docker-compose
+      docker-compose --version
+      sudo dnf install git -y
+    }
+    apt=`command -v apt-get`
+    yum=`command -v yum`
+
+    if [ -n "$apt" ]; then
+        echo "apt detected"
+        aptInstall
+    elif [ -n "$yum" ]; then
+        echo "yum detected"
+        yumInstall
+    else
+        echo "Err: apt or yum not detected.";
+        exit 1;
+    fi
+fi
+}
+
+########################################################
+#                  DEPLOY FUNCTION                     #
+########################################################
+Deploy () {
+echo "test"
+}
+
+########################################################
+#                UPGRADE FUNCTION                      #
+########################################################
+Upgrade () {
+cd networks
+echo "$1 / $2"
+
+# UPGRADE ALL NETWORKS
+if [ "$1" = all ] ; then
+    # Upgrade all files in networks directory that have $STATUS = live
+    for file in *
+    do
+        echo ""
+        source "$file"
+        if [ $OCR_STATUS = live ] ; then
+            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2$[n}"
+            cd $OCR_DIRECTORY
+            echo "Stopping and Removing ocr-$file container."
+            docker stop ocr-$file
+            docker rm ocr-$file
+            echo "deploying new ocr-$file container at relase tag $2"
+            docker run --name ocr-$file --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+            echo "${b}Done.${n}"
+            if [ $BOOTSTRAP_STATUS = live ] ; then
+                echo ""
+                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2$[n}"
+                cd $BOOTSTRAP_DIRECTORY
+                echo "Stopping and Removing bootstrap-$file container."
+                docker stop bootstrap-$file
+                docker rm bootstrap-$file
+                echo "deploying new ${b}bootstrap-$file${n} container at relase tag ${b}$2${n}"
+                docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+                echo "${b}Done.${n}"
+            else
+                echo "No bootstrap node deployed for $file."
+            fi
+        else
+            echo ""
+            echo "$file is being held back."
+        fi
+    done
+
+# UPGRADE ALL LIVE NETWORKS
+elif [ $1 = live ] ; then
+    # Upgrade all files in networks directory that have $STATUS = live
+    for file in *
+    do
+        echo ""
+        source "$file"
+        if [ $OCR_STATUS = live ] ; then
+            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2$[n}"
+            cd $OCR_DIRECTORY
+            echo "Stopping and Removing ocr-$file container."
+            docker stop ocr-$file
+            docker rm ocr-$file
+            echo "deploying new ${b}ocr-$file${n} container at relase tag ${b}$2${n}"
+            docker run --name ocr-$file --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+            echo "${b}Done.${n}"
+            if [ $BOOTSTRAP_STATUS = live ] ; then
+                echo ""
+                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2$[n}"
+                cd $BOOTSTRAP_DIRECTORY
+                echo "Stopping and Removing bootstrap-$file container."
+                docker stop bootstrap-$file
+                docker rm bootstrap-$file
+                echo "deploying new bootstrap-$file container at relase tag $2"
+                docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+                echo "${b}Done.${n}"
+            else
+                echo "No bootstrap node deployed for $file."
+            fi
+        else
+            echo ""
+            echo "$file is being held back."
+        fi
+    done
+
+# UPGRADE ALL MAINNETS
+elif [ $1 = mainnets ] ; then
+    # Upgrade all files in networks directory that have a name ending in mainnet AND $STATUS = live
+    for file in *-mainnet
+    do
+        echo "$file"
+        source "$file"
+        if [ $OCR_STATUS = live ] ; then
+            echo "    Upgrading ${b}ocr-$file${n} to release ${b}$2$[n}"
+            cd $OCR_DIRECTORY
+            echo "Stopping and Removing ocr-$file container."
+            docker stop ocr-$file
+            docker rm ocr-$file
+            echo "deploying new ${b}ocr-$file${n} container at relase tag ${b}$2${n}"
+            docker run --name ocr-$file --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+            echo "${b}Done.${n}"
+            if [ $BOOTSTRAP_STATUS = live ] ; then
+                echo ""
+                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2$[n}"
+                cd $BOOTSTRAP_DIRECTORY
+                docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+                echo "${b}Done.${n}"
+            else
+                echo "No bootstrap node deployed for $file."
+            fi
+        else
+            echo ""
+            echo "$file is being held back."
+        fi
+    done
+
+# UPGRADE ALL TESTNETS
+elif [ $1 = testnets ] ; then
+    # Upgrade all files in networks directory that have a name that does NOT end in mainnet AND $STATUS = live
+    for file in *-testnet
+    do
+        echo ""
+        echo "$file"
+        source "$file"
+        if [ $OCR_STATUS = live ] ; then
+            echo "Upgrading ${b}ocr-$file${n} to release ${b}$2$[n}"
+            cd $OCR_DIRECTORY
+            echo "Stopping and Removing ocr-$file container."
+            docker stop ocr-$file
+            docker rm ocr-$file
+            echo "deploying new ${b}ocr-$file${n} container at relase tag ${b}$2${n}"
+            docker run --name ocr-$file --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+            echo "${b}Done.${n}"
+            if [ $BOOTSTRAP_STATUS = live ] ; then
+                echo ""
+                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2$[n}"
+                cd $BOOTSTRAP_DIRECTORY
+                echo "Stopping and Removing bootstrap-$file container."
+                docker stop bootstrap-$file
+                docker rm bootstrap-$file
+                echo "deploying new ${b}bootstrap-$file${n} container at relase tag ${b}$2"
+                docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+                echo "${b}Done.${n}"
+            else
+                echo "No bootstrap node deployed for $file."
+            fi
+        else
+            echo ""
+            echo "$file is being held back."
+        fi
+    done
+
+# UPGRADE TESTING CONTAINERS
+elif [ $1 = testing ] ; then
+    # PROMT USER FOR CONFIRMATION SINCE THIS WILL LIKELY BREAK SHIT
+    read -p "${b}Are you sure? This upgrades all held back containers.  It is likely to break things if you have more than one held-back node.${n}" -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        exit 1
+    fi
+    read -p "${b}Are you sure you're sure?  This is very likely to cause a bad day.${n}" -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        exit 1
+    fi
+    # Upgrade all files in networks directory that have $STATUS = testing
+    for file in *
+    do
+        echo ""
+        source "$file"
+        if [ $OCR_STATUS = testing ] ; then
+            echo "Upgrading ${b}ocr-$file${n} to release ${b}$2$[n}"
+            cd $OCR_DIRECTORY
+            echo "Stopping and Removing ocr-$file container."
+            docker stop ocr-$file
+            docker rm ocr-$file
+            echo "deploying new ${b}ocr-$file${n} container at relase tag ${b}$2${n}"
+            docker run --name ocr-$file --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+            echo "${b}Done.${n}"
+            if [ $BOOTSTRAP_STATUS = live ] ; then
+                echo ""
+                echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2$[n}"
+                cd $BOOTSTRAP_DIRECTORY
+                echo "Stopping and Removing bootstrap-$file container."
+                docker stop bootstrap-$file
+                docker rm bootstrap-$file
+                echo "deploying new bootstrap-$file container at relase tag $2"
+                docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+                echo "${b}Done.${n}"
+            else
+                echo "No bootstrap node deployed for $file."
+            fi
+        else
+            echo ""
+            echo "$file is being held back."
+        fi
+    done
+    echo ""
+
+# A SINGLE NETWORK IS SPECIFIED
+else
+    echo ""
+    echo "Upgrading ${b}$1${n} to release tag ${b}$2${n}"
+    source $1
+    cd $OCR_DIRECTORY
+    echo "Stopping and Removing ocr-$1 container."
+    docker stop ocr-$1
+    docker rm ocr-$1
+    echo "deploying new ${b}ocr-$1${n} container at relase tag ${b}$2${n}"
+    docker run --name ocr-$1 --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+    echo "${b}Done.${n}"
+    if [ $BOOTSTRAP_STATUS = live ] ; then
+        echo ""
+        echo "    Upgrading ${b}bootstrap-$1${n} to release ${b}$2$[n}"
+        cd $BOOTSTRAP_DIRECTORY
+        echo "Stopping and Removing bootstrap-$1 container."
+        docker stop bootstrap-$1
+        docker rm bootstrap-$1
+        echo "deploying new bootstrap-$1 container at relase tag $2"
+        docker run --name bootstrap-$1 --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /c>
+        echo "${b}Done.${n}"
+    else
+        echo "No bootstrap node deployed for $1."
+    fi
+
+fi
+
+cd $CURRENT_DUR
+}
+
+########################################################
+#                   LIST FUNCTION                      #
+########################################################
+List () {
+tree networks
+}
+
+########################################################
+#                   SHOW FUNCTION                      #
+########################################################
+Show () {
+docker ps --all --filter "name=chainlink" --format "{{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Ports}}\t{{.Status}}" \
+            | (echo -e "CONTAINER_ID\tNAMES\tIMAGE\tPORTS\tSTATUS" && cat) \
+            | awk '{printf "\033[1;32m%s\t\033[01;38;5;95;38;5;196m%s\t\033[00m\033[1;34m%s\t\033[01;90m%s %s %s %s %s %s %s\033[00m\n", $1, $2, $3, $4, $5, $6, $7, $8, $9, $10;}' \
+            | column -s$'\t' -t \
+            | awk 'NR<2{print $0;next}{print $0 | "sort --key=2"}'
+}
+
+########################################################
+#                  VERSION FUNCTION                    #
+########################################################
+Version() {
+# Print Version
+echo "cl-manager version: ${b}$VERSION${n}"
+}
+
+########################################################
+#                    HELP FUNCTION                     #
+########################################################
+Help() {
+  # Display Help
+  echo "This script helps you deploy, manage, and upgrade your Chainlink nodes."
+  echo
+  echo "Usage:  ${b}cl-anager option NETWORK_NAME CONTAINER_TAG${n}"
+  echo ""
+  echo "options:"
+  echo ""
+  echo "-i        Initializes a single host Chainlink host."
+  echo "${b}            Installs Docker-CE, Creates Docker network, and deploys a PostgreSQL container,${n}"
+  echo "${b}            use this if you want a quick turnkey deployment.${n}"
+  echo ""
+  echo "-d        Deploys new Chainlink Node(s)."
+  echo "${b}            ex: cl-manager -d arbitrum-mainnet 1.3.0${n}"
+  echo ""
+  echo "-u        Upgrades Chainlink Nodes."
+  echo "${b}            ex: cl-manager -u arbitrum-mainnet 1.3.0${n}"
+  echo "${b}            ex: cl-manager -u all 1.3.0${n}"
+  echo ""
+  echo "-v        Print script version and exit."
+  echo ""
+  echo "-l        Print all locally supported Chainlink Networks."
+  echo ""
+  echo "-s        Print details of currently running Chainlink containers."
+  echo ""
+  echo "-h        Print this Help function and exit."
+  echo
+}
+
+########################################################
+#                        MAIN                          #
+########################################################
+while getopts ":id:u:lsvh" option; do
+   case ${option} in
+      i) # Initialize new Chainlink node host
+         Initialize
+         exit
+         ;;
+      d) # Deploy new Chainlink node(s)
+         shift
+         Deploy "$@"
+         exit
+         ;;
+      u) # Upgrade existing Chainlink node(s)
+         shift
+         Upgrade "$@"
+         exit
+         ;;
+      l) # List locally configured networks
+         List
+         exit
+         ;;
+      s) # Show details of currently running nodes
+         Show
+         exit
+         ;;
+      v) # Print Version
+         Version
+         exit
+         ;;
+      h) # Display Help
+         Help
+         exit
+         ;;
+      \?) # Invalid Option
+         echo "Invalid option: $OPTARG" 1>&2
+         exit 1
+         ;;
+      :) # Invalid Option
+         echo "Invalid option: $OPTARG requires an argument" 1>&2
+         echo ""
+         echo "Please specify the desired network or 'all', and the desired release tag." 1>&2
+         echo "ex: ${b}cl-manager -$OPTARG arbitrum-mainnet 1.3.0${n}" 1>&2
+         echo "ex: ${b}cl-manager -$OPTARG all 1.3.0${n}" 1>&2
+         exit 1
+         ;;
+   esac
+done
