@@ -63,6 +63,19 @@ if [ "$1" = all ] ; then
                 echo "deploying new ${b}bootstrap-$file${n} container at relase tag ${b}$2${n}"
                 docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
                 echo "${b}Done.${n}"
+                if [ $KEEPER_STATUS = live ] ; then
+                    echo ""
+                    echo "    Upgrading ${b}keeper-$file${n} to release ${b}$2${n}"
+                    cd $KEEPER_DIRECTORY
+                    echo "Stopping and Removing keeper-$file container."
+                    docker stop keeper-$file
+                    docker rm keeper-$file
+                    echo "deploying new ${b}keeper-$file${n} container at relase tag ${b}$2${n}"
+                    docker run --name keeper-$file --restart unless-stopped -p $KEEPER_LOG_PORT:6688 -p $KEEPER_GUI_PORT:6689 -v $KEEPER_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+                    echo "${b}Done.${n}"
+                else
+                    echo "No keeper node deployed for $file."
+                fi
             else
                 echo "No bootstrap node deployed for $file."
             fi
@@ -98,6 +111,19 @@ elif [ $1 = live ] ; then
                 echo "deploying new bootstrap-$file container at relase tag $2"
                 docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
                 echo "${b}Done.${n}"
+                if [ $KEEPER_STATUS = live ] ; then
+                    echo ""
+                    echo "    Upgrading ${b}keeper-$file${n} to release ${b}$2${n}"
+                    cd $KEEPER_DIRECTORY
+                    echo "Stopping and Removing keeper-$file container."
+                    docker stop keeper-$file
+                    docker rm keeper-$file
+                    echo "deploying new ${b}keeper-$file${n} container at relase tag ${b}$2${n}"
+                    docker run --name keeper-$file --restart unless-stopped -p $KEEPER_LOG_PORT:6688 -p $KEEPER_GUI_PORT:6689 -v $KEEPER_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+                    echo "${b}Done.${n}"
+                else
+                    echo "No keeper node deployed for $file."
+                fi
             else
                 echo "No bootstrap node deployed for $file."
             fi
@@ -203,7 +229,7 @@ elif [ $1 = testing ] ; then
             echo "deploying new ${b}ocr-$file${n} container at relase tag ${b}$2${n}"
             docker run --name ocr-$file --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
             echo "${b}Done.${n}"
-            if [ $BOOTSTRAP_STATUS = live ] ; then
+            if [ $BOOTSTRAP_STATUS = testing ] ; then
                 echo ""
                 echo "    Upgrading ${b}bootstrap-$file${n} to release ${b}$2${n}"
                 cd $BOOTSTRAP_DIRECTORY
@@ -213,6 +239,19 @@ elif [ $1 = testing ] ; then
                 echo "deploying new bootstrap-$file container at relase tag $2"
                 docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
                 echo "${b}Done.${n}"
+                if [ $KEEPER_STATUS = testing ] ; then
+                    echo ""
+                    echo "    Upgrading ${b}keeper-$file${n} to release ${b}$2${n}"
+                    cd $KEEPER_DIRECTORY
+                    echo "Stopping and Removing keeper-$file container."
+                    docker stop keeper-$file
+                    docker rm keeper-$file
+                    echo "deploying new ${b}keeper-$file${n} container at relase tag ${b}$2${n}"
+                    docker run --name keeper-$file --restart unless-stopped -p $KEEPER_LOG_PORT:6688 -p $KEEPER_GUI_PORT:6689 -v $KEEPER_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+                    echo "${b}Done.${n}"
+                else
+                    echo "No keeper node deployed for $file."
+                fi
             else
                 echo "No bootstrap node deployed for $file."
             fi
@@ -228,25 +267,34 @@ else
     echo ""
     echo "    Upgrading ${b}$1${n} to release tag ${b}$2${n}"
     source "$1"
-    cd $OCR_DIRECTORY
-    echo "Stopping and Removing ocr-$1 container."
-    docker stop ocr-$1
-    docker rm ocr-$1
-    echo "deploying new ${b}ocr-$1${n} container at relase tag ${b}$2${n}"
-    docker run --name ocr-$1 --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
-    echo "${b}Done.${n}"
-    if [ $BOOTSTRAP_STATUS = live ] ; then
-        echo ""
-        echo "    Upgrading ${b}bootstrap-$1${n} to release ${b}$2${n}"
+    if [[ $1 = ocr-* ]]
+    then
+        cd $OCR_DIRECTORY
+        echo "Stopping and Removing $1 container."
+        docker stop $1
+        docker rm $1
+        echo "deploying new ${b}$1${n} container at relase tag ${b}$2${n}"
+        docker run --name $1 --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+        echo "${b}Done.${n}"
+    elif [[ $1 = bootstrap-* ]]
+    then
         cd $BOOTSTRAP_DIRECTORY
-        echo "Stopping and Removing bootstrap-$1 container."
-        docker stop bootstrap-$1
-        docker rm bootstrap-$1
-        echo "deploying new bootstrap-$1 container at relase tag $2"
-        docker run --name bootstrap-$1 --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
+        echo "Stopping and Removing $1 container."
+        docker stop $1
+        docker rm $1
+        docker run --name $1 --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/password
+        echo "${b}Done.${n}"
+    elif [[ $1 = keeper-* ]]
+    then
+        cd $KEEPER_DIRECTORY
+        echo "Stopping and Removing $1 container."
+        docker stop $1
+        docker rm $1
+        docker run --name $1 --restart unless-stopped -p $KEEPER_PORT:$KEEPER_PORT -p $KEEPER_LOG_PORT:6688 -p $KEEPER_GUI_PORT:6689 -v $KEEPER_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/password
         echo "${b}Done.${n}"
     else
-        echo "No bootstrap node deployed for $1."
+        echo "Not supported."
+        exit
     fi
 fi
 
