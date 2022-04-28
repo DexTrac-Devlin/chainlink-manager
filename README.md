@@ -14,7 +14,7 @@ script(s) used to help manage chainlink nodes on a single host
 ---
 
 ## Utilization
-### Initialize a New Docker Environment for Chainlink External Adapters
+### Initialize a New Docker Environment for Chainlink Nodes
 #### NOTE: This is not currently working.
 * This will:
   * Install Docker-CE if it is not already installed.
@@ -27,7 +27,7 @@ sudo ./cl-manager -i
 
 
 --
-### Deploy New External Adapter With Specific Version
+### Deploy New Chainlink Node With Specific Version
 * This will:
   * Deploy a new Chainlink Node of the desired release.
 
