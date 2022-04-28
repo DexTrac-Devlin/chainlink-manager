@@ -8,8 +8,8 @@ script(s) used to help manage chainlink nodes on a single host
 
 ---
 ## General Directions
-* Update the ```./networks/$NETWORK_MAINNET``` file with the keys for each of your Chainlink Nodes
-* Modify the file(s) for the external adapter(s) you want deployed.
+* Update the ```./networks/$NETWORK_MAINNET``` file(s) with the values specific to each of your Chainlink Nodes
+* Use this script to deploy and upgrade your Chainlink Nodes.
 
 ---
 
