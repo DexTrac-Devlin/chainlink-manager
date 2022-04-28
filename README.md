@@ -50,7 +50,7 @@ cl-manager -u ocr-arbitrum-mainnet 1.3.0
 cl-manager -u all 1.3.0
 ```
 
-####Notes of Batch Management:
+#### Notes of Batch Management:
 * You can manage/upgrade multple Chainlink Nodes at once with different flags:
   * ```bash
   cl-manager -u all 1.3.0
