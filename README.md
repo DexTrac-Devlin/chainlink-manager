@@ -52,21 +52,13 @@ cl-manager -u all 1.3.0
 
 #### Notes of Batch Management:
 * You can manage/upgrade multple Chainlink Nodes at once with different flags:
-  * ```bash
-  cl-manager -u all 1.3.0
-  ```
+  * `cl-manager -u all 1.3.0`
     * The `all` option will apply the requested upgrade to all Chainlink Nodes that have the `*_STATUS` of `live`.
-  * ``bash
-  cl-manager -u mainnet 1.3.0
-  ```
+  * `cl-manager -u mainnet 1.3.0`
     * The `mainnet` option will apply the requested upgrade to all `*_*_mainnet` Chainlink Nodes that have the `*_STATUS` of `live`.
-  * ``bash
-  cl-manager -u testnet 1.3.0
-  ```
+  * `cl-manager -u testnet 1.3.0`
     * The `testnet` option will apply the requested upgrade to all `*_*_testnet` Chainlink Nodes that have the `*_STATUS` of `live`.
-  * ```bash
-  cl-manager -u testing 1.3.0
-  ```
+  * `cl-manager -u testing 1.3.0`
     * The `testing` option will apply the requested upgrade to all `*_*_*` Chainlink Nodes that have the `*_STATUS` of `testing`.
       * Please be careful when using this.  If you have multiple nodes with the status of `testing`, and are on different releases, this will move them all to the specified release.
 
