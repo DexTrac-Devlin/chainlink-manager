@@ -22,6 +22,14 @@ OCR_GUI_PORT=6689
 OCR_LOG_PORT=6688
 
 ####################
+#  KEEPER VALUES   #
+####################
+# KEEPER_DIRECTORY=
+# KEEPER_STATUS=
+# KEEPER_GUI_PORT=
+# KEEPER_LOG_PORT=
+
+####################
 # BOOTSTRAP VALUES #
 ####################
 # BOOTSTRAP_DIRECTORY=~/.bootstrap-data/.chainlink-example-bootstrap

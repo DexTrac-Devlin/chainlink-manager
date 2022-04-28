@@ -22,6 +22,14 @@ OCR_GUI_PORT=
 OCR_LOG_PORT=
 
 ####################
+#  KEEPER VALUES   #
+####################
+# KEEPER_DIRECTORY=
+# KEEPER_STATUS=
+# KEEPER_GUI_PORT=
+# KEEPER_LOG_PORT=
+
+####################
 # BOOTSTRAP VALUES #
 ####################
 # BOOTSTRAP_DIRECTORY=

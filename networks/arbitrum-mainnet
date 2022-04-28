@@ -6,6 +6,7 @@
 ####################
 # If you're not running a bootstrap node, just leave the lines commendted out.
 
+# Notes Regarding Each Variable:
 # OCR_DIRECTORY --> The directory on your host machine that will be mounted as the container's volume.  This directory will contain your .env, secret, and log files.
 # OCR_STATUS    --> This should be set to 'live' or 'testing'.  If live, it will use the release you specify.  If testing, it will hold back the container so we do not apply a breaking change to a test deployment.
 # OCR_PORT      --> This is the port that your OCR node will listen on for connections from other OCR nodes.
@@ -20,6 +21,14 @@ OCR_STATUS=
 OCR_PORT=
 OCR_GUI_PORT=
 OCR_LOG_PORT=
+
+####################
+#  KEEPER VALUES   #
+####################
+# KEEPER_DIRECTORY=
+# KEEPER_STATUS=
+# KEEPER_GUI_PORT=
+# KEEPER_LOG_PORT=
 
 ####################
 # BOOTSTRAP VALUES #
