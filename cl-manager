@@ -36,20 +36,20 @@ do
         echo "    Deploying ${b}ocr-$file${n} at release ${b}$2${n}"
         cd $OCR_DIRECTORY
         echo "deploying new ocr-$file container at relase tag $2"
-        docker run --name ocr-$file --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$1 local n -p /chainlink/.password
+        docker run --name ocr-$file --restart unless-stopped -p $OCR_PORT:$OCR_PORT -p $OCR_LOG_PORT:6688 -p $OCR_GUI_PORT:6689 -v $OCR_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
         echo "${b}Done.${n}"
         if [ $BOOTSTRAP_STATUS = live ] ; then
             echo ""
             echo "    Deploying ${b}bootstrap-$file${n} at release ${b}$2${n}"
             cd $BOOTSTRAP_DIRECTORY
             echo "deploying new ${b}bootstrap-$file${n} container at relase tag ${b}$2${n}"
-            docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$1 local n -p /chainlink/.password
+            docker run --name bootstrap-$file --restart unless-stopped -p $BOOTSTRAP_PORT:$BOOTSTRAP_PORT -p $BOOTSTRAP_LOG_PORT:6688 -p $BOOTSTRAP_GUI_PORT:6689 -v $BOOTSTRAP_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
             echo "${b}Done.${n}"
             if [ $KEEPER_STATUS = live ] ; then
                 echo ""
                 echo "    Deploying ${b}keeper-$file${n} at release ${b}$2${n}"
                 echo "deploying new ${b}keeper-$file${n} container at relase tag ${b}$2${n}"
-                docker run --name keeper-$file --restart unless-stopped -p $KEEPER_LOG_PORT:6688 -p $KEEPER_GUI_PORT:6689 -v $KEEPER_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$1 local n -p /chainlink/.password
+                docker run --name keeper-$file --restart unless-stopped -p $KEEPER_LOG_PORT:6688 -p $KEEPER_GUI_PORT:6689 -v $KEEPER_DIRECTORY:/chainlink --env-file=.env -d smartcontract/chainlink:$2 local n -p /chainlink/.password
                 echo "${b}Done.${n}"
             else
                 echo "No keeper node deployed for $file."
