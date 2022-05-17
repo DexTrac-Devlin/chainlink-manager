@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ########################################################
-#                Formatting Variables                  #
+#                FORMATTING VARIABLES                  #
 ########################################################
 b=$(tput bold)
 n=$(tput sgr0)
@@ -9,7 +9,7 @@ un=$(tput smul)
 nun=$(tput rmul)
 
 ########################################################
-#                      Variables                       #
+#                      VARIABLES                       #
 ########################################################
 IP_ADDRESS=$(ip route get 1.2.3.4 | awk '{print $7}')
 VERSION="0.0.3"
